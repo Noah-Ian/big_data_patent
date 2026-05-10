@@ -10,7 +10,7 @@ dashboard.
 PatentsView bulk files → Python → pandas → SQLite → SQL → Reports / Charts / Dashboard
 ```
 
-**Description **
+**Description**
 
 - SQLite warehouse with seven fully-indexed tables
 - 9 analytical SQL queries (7 required + 2 bonus CPC queries)
