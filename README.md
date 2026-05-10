@@ -10,7 +10,7 @@ dashboard.
 PatentsView bulk files → Python → pandas → SQLite → SQL → Reports / Charts / Dashboard
 ```
 
-**What you get out of the box**
+**Description **
 
 - SQLite warehouse with seven fully-indexed tables
 - 9 analytical SQL queries (7 required + 2 bonus CPC queries)
@@ -22,7 +22,7 @@ PatentsView bulk files → Python → pandas → SQLite → SQL → Reports / Ch
   
 ---
 
-## Quick start (local)
+## reproducibility
 
 ```powershell
 git clone <your-repo-url>
@@ -43,30 +43,19 @@ The dashboard opens at <http://localhost:8501>.
 
 ---
 
-## What gets downloaded (default, lightweight)
+## What gets downloaded
 
-Default mode downloads only two PatentsView files (~233 MB total):
-
+Default mode downloads only two PatentsView files
 | File | Size | Used for |
 |------|------|----------|
 | `g_patent.tsv.zip`                 | 230 MB | Patents (title, grant date, year) |
 | `g_location_disambiguated.tsv.zip` |   3 MB | Real country distribution |
 
 
-### Opting in to the real (heavy) data
+### Opting in to the real data
 
 Flip the flags in `src/config.py` and rerun `python -m src.run_all`:
 
-| Flag | Extra download | What it enables |
-|------|-----|-----|
-| `USE_REAL_INVENTORS = True` | +1.7 GB  | Real disambiguated inventor names + country from PatentsView |
-| `USE_REAL_COMPANIES = True` | +850 MB  | Real disambiguated assignee names |
-| `USE_CPC = True`            | +495 MB  | CPC classification (innovation categories) – adds Q8/Q9 and a whole dashboard tab |
-
-Everything downstream (schema, queries, reports, dashboard) just works;
-the synthetic path is only active while the corresponding flag is off.
-
----
 
 ## Project layout
 
