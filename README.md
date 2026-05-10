@@ -1,8 +1,5 @@
 # Global Patent Intelligence Pipeline
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://patent-intel-pipeline.streamlit.app/)
-
-> **Live demo:** [patent-intel-pipeline.streamlit.app](https://patent-intel-pipeline.streamlit.app/)
 
 An end-to-end data-engineering project that turns raw USPTO
 PatentsView bulk data into a clean SQLite warehouse, publication-
@@ -31,7 +28,7 @@ PatentsView bulk files → Python → pandas → SQLite → SQL → Reports / Ch
 
 ```powershell
 git clone <your-repo-url>
-cd patent-intel-pipeline
+cd big_data_patent
 
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1            # Windows
@@ -57,10 +54,6 @@ Default mode downloads only two PatentsView files (~233 MB total):
 | `g_patent.tsv.zip`                 | 230 MB | Patents (title, grant date, year) |
 | `g_location_disambiguated.tsv.zip` |   3 MB | Real country distribution |
 
-Inventors and companies are generated as a realistic synthetic universe
-(5 000 inventors / 800 companies, Zipfian-weighted, country-sampled
-from real locations, reproducible seed). This keeps a fresh clone
-laptop-friendly while still exercising every piece of the pipeline.
 
 ### Opting in to the real (heavy) data
 
@@ -141,19 +134,8 @@ All in [`sql/queries.sql`](sql/queries.sql), parsed at runtime by
 `src/analyze.py` so `dashboard.py` and `report.py` share one source of
 truth.
 
-| # | Question | Technique |
-|---|----------|-----------|
-| Q1 | Who has the most patents? | `GROUP BY` + `COUNT` + `LIMIT` |
-| Q2 | Which companies own the most patents? | Same pattern via `patent_company` |
-| Q3 | Which countries produce the most patents? | `JOIN` inventors + `GROUP BY country` |
-| Q4 | Patents granted per year? | `GROUP BY year` |
-| Q5 | Combined patents × inventors × companies | Four-way `LEFT JOIN` |
-| Q6 | Companies ranked by avg patents/year | Two chained CTEs (`WITH`) |
-| Q7 | Inventor rank inside each country | `RANK()`, `DENSE_RANK()`, `ROW_NUMBER()` |
-| **Q8** (bonus) | CPC section share | `GROUP BY` on CPC + lookup |
-| **Q9** (bonus) | CPC volume per section per year | Two-key `GROUP BY` |
 
----
+
 
 ## Reports produced
 
@@ -184,73 +166,3 @@ publication-quality. Trend line, top countries / companies / inventors
 and (when `USE_CPC=True`) a donut of CPC section share.
 
 ---
-
-## The Streamlit dashboard
-
-`streamlit run src/dashboard.py` opens a single-page dashboard with:
-
-- **Hero banner** + **five KPI cards** (patents, inventors, companies,
-  relationship counts, CPC classifications)
-- **Sidebar controls**: year range slider, Top-N selector
-- **Tabs**:
-  - **Overview** – trend area chart + top companies + recent patents sample
-  - **Inventors** – leaderboard + full Q7 table with country filter
-  - **Companies** – top-N bars + Q6 CTE ranking
-  - **Countries** – interactive **world map** (Plotly choropleth) + top-N bars
-  - **CPC Categories** – donut + time-series (unlocked when `USE_CPC=True`)
-  - **SQL Queries** – every Qn with its raw SQL and live result table
-- **Self-healing database**: if `db/patents.db` is missing (e.g. fresh
-  deployment) the dashboard rebuilds it from the committed
-  `data/processed/*.csv` on first load.
-
-Branding / theming live in `.streamlit/config.toml` and `src/config.py::BRAND`.
-
----
-
-## Deploy to Streamlit Community Cloud (free, one click)
-
-1. Push this repo to GitHub. **Commit `data/processed/*.csv`** (they're
-   ~15 MB total) so the dashboard can rebuild the database on deploy.
-   `db/patents.db` stays gitignored.
-2. Go to <https://streamlit.io/cloud> → **New app** → pick this repo.
-3. Set **Main file path** to `src/dashboard.py`.
-4. Click Deploy. First load takes ~30 s while the DB is rebuilt.
-
-No secrets or env vars needed.
-
----
-
-## Tuning knobs (`src/config.py`)
-
-| Variable | Default | What it does |
-|----------|---------|--------------|
-| `YEAR_MIN` / `YEAR_MAX`          | `2020` / `2024` | Year window kept after filtering |
-| `MAX_PATENTS`                    | `100_000`       | Stratified sample cap (set `None` for the full ~1.8 M) |
-| `N_INVENTORS` / `N_COMPANIES`    | `5_000` / `800` | Synthetic universe size |
-| `CHUNKSIZE`                      | `100_000`       | Pandas chunk size for big TSVs |
-| `USE_REAL_INVENTORS`             | `False`         | Pull 1.7 GB of real inventor files |
-| `USE_REAL_COMPANIES`             | `False`         | Pull ~850 MB of real assignee files |
-| `USE_CPC`                        | `False`         | Pull 495 MB, enable Q8/Q9 and CPC tab |
-| `BRAND` / `PALETTE`              | USPTO blues     | Dashboard + chart colours |
-
-
-## Reproducibility
-
-Same input → same output, every time:
-
-- All random draws are seeded (`RANDOM_SEED = 42`)
-- The year filter is deterministic
-- SQLite is rebuilt from scratch on every load
-- Synthetic names are pulled from a fixed alphabet
-
-Anyone who clones the repo and runs `python -m src.run_all` gets
-byte-identical `data/processed/*.csv` and identical query results.
-
-
-## Data attribution
-
-- USPTO Open Data Portal – PatentsView Granted Patent Disambiguated Data:
-  <https://data.uspto.gov/bulkdata/datasets/pvgpatdis>
-- S3 mirror (direct downloads):
-  `https://s3.amazonaws.com/data.patentsview.org/download/`
-- Data dictionary: `PV_grant_data_dictionary.pdf` on the dataset page.
